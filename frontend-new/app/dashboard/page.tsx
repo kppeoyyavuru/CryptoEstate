@@ -1,308 +1,214 @@
-import { currentUser } from "@clerk/nextjs/server";
-import { redirect } from "next/navigation";
-import Link from "next/link";
-import Image from "next/image";
+'use client';
 
-// Mock user investment data
-const userInvestments = {
-  totalInvested: "1.45 ETH",
-  portfolioValue: "1.72 ETH",
-  returns: "+18.6%",
-  returnColor: "#10B981", // green for positive returns
-  properties: 3,
-  recentActivity: [
-    {
-      id: 1,
-      type: "investment",
-      property: "Downtown Luxury Apartment",
-      amount: "0.5 ETH",
-      date: "2023-06-15",
-      status: "completed"
-    },
-    {
-      id: 2,
-      type: "dividend",
-      property: "Beachfront Villa",
-      amount: "0.015 ETH",
-      date: "2023-06-01",
-      status: "completed"
-    },
-    {
-      id: 3,
-      type: "investment",
-      property: "Urban Micro-Loft",
-      amount: "0.2 ETH",
-      date: "2023-05-22",
-      status: "completed"
+import { useState, useEffect } from 'react';
+import { UserButton, useUser } from '@clerk/nextjs';
+import { redirect } from 'next/navigation';
+import Link from 'next/link';
+import { Property } from '../types/property';
+
+export default function Dashboard() {
+  const { isLoaded, isSignedIn, user } = useUser();
+  const [investments, setInvestments] = useState<any[]>([]);
+  const [properties, setProperties] = useState<Record<string, Property>>({});
+  const [loading, setLoading] = useState(true);
+
+  // Redirect if not signed in
+  useEffect(() => {
+    if (isLoaded && !isSignedIn) {
+      redirect('/sign-in');
     }
-  ],
-  ownedProperties: [
-    {
-      id: 1,
-      title: "Downtown Luxury Apartment",
-      ownership: "35%",
-      currentValue: "0.6 ETH",
-      purchaseValue: "0.5 ETH",
-      return: "+20%",
-      location: "New York, NY",
-      image: "https://images.unsplash.com/photo-1493809842364-78817add7ffb?q=80&w=2070&auto=format&fit=crop"
-    },
-    {
-      id: 2,
-      title: "Beachfront Villa",
-      ownership: "8%",
-      currentValue: "0.22 ETH",
-      purchaseValue: "0.2 ETH",
-      return: "+10%",
-      location: "Miami, FL",
-      image: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=2070&auto=format&fit=crop"
-    },
-    {
-      id: 3,
-      title: "Urban Micro-Loft",
-      ownership: "42%",
-      currentValue: "0.9 ETH",
-      purchaseValue: "0.75 ETH",
-      return: "+20%",
-      location: "Chicago, IL",
-      image: "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?q=80&w=2070&auto=format&fit=crop"
+  }, [isLoaded, isSignedIn]);
+
+  // Fetch user investments
+  useEffect(() => {
+    async function fetchInvestments() {
+      if (!isSignedIn) return;
+      
+      try {
+        const response = await fetch('/api/investments');
+        if (!response.ok) {
+          throw new Error('Failed to fetch investments');
+        }
+        const data = await response.json();
+        // If the API returns an error object (which happens when user has no investments)
+        // set investments to an empty array
+        setInvestments(Array.isArray(data) ? data : []);
+      } catch (error) {
+        console.error('Error loading investments:', error);
+        // Ensure investments is an empty array if there's an error
+        setInvestments([]);
+      }
     }
-  ]
-};
 
-// Mock chart data
-const monthlyReturnsData = [
-  { month: "Jan", return: 0.02 },
-  { month: "Feb", return: 0.015 },
-  { month: "Mar", return: 0.025 },
-  { month: "Apr", return: 0.01 },
-  { month: "May", return: 0.03 },
-  { month: "Jun", return: 0.035 }
-];
+    // Fetch all properties to match with investments
+    async function fetchProperties() {
+      try {
+        const response = await fetch('/api/properties');
+        if (!response.ok) {
+          throw new Error('Failed to fetch properties');
+        }
+        const data = await response.json();
+        
+        // Convert array to object with id as key for easy lookup
+        const propertiesMap = data.reduce((acc: Record<string, Property>, property: Property) => {
+          acc[property.id] = property;
+          return acc;
+        }, {});
+        
+        setProperties(propertiesMap);
+      } catch (error) {
+        console.error('Error loading properties:', error);
+      } finally {
+        setLoading(false);
+      }
+    }
 
-export default async function DashboardPage() {
-  // Check if user is authenticated
-  const user = await currentUser();
-  
-  if (!user) {
-    redirect("/sign-in");
+    fetchInvestments();
+    fetchProperties();
+  }, [isSignedIn]);
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-orange-500"></div>
+      </div>
+    );
   }
-  
-  // Calculate max return for chart scaling
-  const maxReturn = Math.max(...monthlyReturnsData.map(d => d.return));
 
   return (
-    <div className="dashboard-page">
-      {/* Navigation */}
-      <header className="dashboard-header">
-        <nav className="dashboard-nav">
-          <Link href="/" className="nav-logo">
-            <span className="nav-logo-icon"></span>
-            CryptoEstates
+    <div className="container mx-auto px-4 py-8">
+      <div className="flex justify-between items-center mb-8">
+        <h1 className="text-3xl font-bold">My Dashboard</h1>
+        <div className="flex items-center gap-4">
+          <Link 
+            href="/invest" 
+            className="bg-orange-500 text-white py-2 px-4 rounded-md hover:bg-orange-600 transition"
+          >
+            Explore Investments
           </Link>
-          
-          <div className="nav-links">
-            <Link href="/dashboard" className="nav-link active">Dashboard</Link>
-            <Link href="/invest" className="nav-link">Invest</Link>
-            <Link href="/portfolio" className="nav-link">Portfolio</Link>
-          </div>
-        </nav>
-      </header>
-
-      {/* Main Content */}
-      <div className="dashboard-container">
-        {/* Welcome Header */}
-        <div className="dashboard-welcome">
-          <h1 className="dashboard-title">
-            Welcome, {user.firstName || 'Investor'}
-          </h1>
-          <p className="dashboard-subtitle">
-            Here's an overview of your real estate investment portfolio
-          </p>
-        </div>
-
-        {/* Stats Overview */}
-        <div className="stats-grid">
-          <div className="stat-card">
-            <p className="stat-label">
-              Total Invested
-            </p>
-            <p className="stat-value">
-              {userInvestments.totalInvested}
-            </p>
-          </div>
-
-          <div className="stat-card">
-            <p className="stat-label">
-              Portfolio Value
-            </p>
-            <p className="stat-value">
-              {userInvestments.portfolioValue}
-            </p>
-          </div>
-
-          <div className="stat-card">
-            <p className="stat-label">
-              Total Return
-            </p>
-            <p className="stat-value positive">
-              {userInvestments.returns}
-            </p>
-          </div>
-
-          <div className="stat-card">
-            <p className="stat-label">
-              Properties Owned
-            </p>
-            <p className="stat-value">
-              {userInvestments.properties}
-            </p>
-          </div>
-        </div>
-
-        {/* Portfolio Performance and Activity */}
-        <div className="dashboard-grid">
-          {/* Portfolio Performance Chart */}
-          <div className="dashboard-card">
-            <h2 className="card-title">
-              Monthly Returns
-            </h2>
-            
-            <div className="chart-container">
-              <div className="chart-bars">
-                {monthlyReturnsData.map((data, index) => (
-                  <div key={index} className="chart-column">
-                    <div className="chart-bar" style={{ height: `${(data.return / maxReturn) * 150}px` }}></div>
-                    <div className="chart-label">
-                      {data.month}
-                    </div>
-                  </div>
-                ))}
-                
-                {/* Y-axis lines */}
-                <div className="chart-grid">
-                  {[0, 1, 2, 3].map((_, index) => (
-                    <div key={index} className="chart-grid-line" style={{ bottom: `${index * 50}px` }}></div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Recent Activity */}
-          <div className="dashboard-card">
-            <h2 className="card-title">
-              Recent Activity
-            </h2>
-            
-            <div className="activity-list">
-              {userInvestments.recentActivity.map((activity) => (
-                <div key={activity.id} className="activity-item">
-                  <div className={`activity-icon ${activity.type === 'investment' ? 'investment' : 'dividend'}`}>
-                    {activity.type === 'investment' ? (
-                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" width="20" height="20">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 18.75a60.07 60.07 0 0 1 15.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 0 1 3 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 0 0-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 0 1-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 0 0 3 15h-.75M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm3 0h.008v.008H18V10.5Zm-12 0h.008v.008H6V10.5Z" />
-                      </svg>
-                    ) : (
-                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" width="20" height="20">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-                      </svg>
-                    )}
-                  </div>
-                  
-                  <div className="activity-content">
-                    <p className="activity-title">
-                      {activity.type === 'investment' ? 'Invested in' : 'Received dividend from'} {activity.property}
-                    </p>
-                    <p className="activity-date">
-                      {new Date(activity.date).toLocaleDateString()}
-                    </p>
-                  </div>
-                  
-                  <div className="activity-amount">
-                    <p className={`amount ${activity.type === 'investment' ? 'investment' : 'dividend'}`}>
-                      {activity.type === 'investment' ? '-' : '+'}{activity.amount}
-                    </p>
-                    <p className="activity-status">
-                      {activity.status}
-                    </p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* Your Properties */}
-        <div className="properties-section">
-          <h2 className="section-title">
-            Your Properties
-          </h2>
-          
-          <div className="properties-grid">
-            {userInvestments.ownedProperties.map((property) => (
-              <div key={property.id} className="property-card">
-                <div className="property-image-container">
-                  <Image
-                    src={property.image}
-                    alt={property.title}
-                    fill
-                    className="property-image"
-                  />
-                  <div className="property-badge">
-                    {property.ownership} Ownership
-                  </div>
-                </div>
-                
-                <div className="property-content">
-                  <h3 className="property-title">
-                    {property.title}
-                  </h3>
-                  <p className="property-location">
-                    {property.location}
-                  </p>
-                  
-                  <div className="property-stats">
-                    <div className="property-stat">
-                      <p className="stat-label">Purchase Value</p>
-                      <p className="stat-value">{property.purchaseValue}</p>
-                    </div>
-                    <div className="property-stat">
-                      <p className="stat-label">Current Value</p>
-                      <p className="stat-value">{property.currentValue}</p>
-                    </div>
-                    <div className="property-stat">
-                      <p className="stat-label">Return</p>
-                      <p className="stat-value positive">{property.return}</p>
-                    </div>
-                  </div>
-                  
-                  <div className="property-actions">
-                    <button className="btn btn-primary">
-                      View Details
-                    </button>
-                    <button className="btn btn-outline">
-                      Sell Tokens
-                    </button>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Explore More Properties */}
-        <div className="cta-section">
-          <h2 className="cta-title">
-            Looking to expand your portfolio?
-          </h2>
-          <p className="cta-description">
-            Explore our curated selection of premium real estate opportunities with high growth potential.
-          </p>
-          <Link href="/invest" className="btn btn-primary btn-large">
-            Explore Investment Opportunities
+          <Link 
+            href="/profile" 
+            className="bg-white border border-gray-300 text-gray-700 py-2 px-4 rounded-md hover:bg-gray-50 transition"
+          >
+            View Profile
           </Link>
+          <UserButton />
         </div>
+      </div>
+
+      <div className="bg-white rounded-lg shadow-md p-6 mb-8">
+        <h2 className="text-2xl font-semibold mb-4">Welcome, {user?.firstName || 'Investor'}!</h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="bg-gradient-to-r from-orange-100 to-orange-200 p-4 rounded-lg">
+            <h3 className="text-lg font-medium text-gray-800">Total Investments</h3>
+            <p className="text-2xl font-bold text-gray-900">{investments.length}</p>
+          </div>
+          <div className="bg-gradient-to-r from-orange-100 to-orange-200 p-4 rounded-lg">
+            <h3 className="text-lg font-medium text-gray-800">Total Value</h3>
+            <p className="text-2xl font-bold text-gray-900">
+              {investments.length > 0 
+                ? investments.reduce((total, inv) => total + (inv.amountInvested || 0), 0).toFixed(3)
+                : "0.000"} ETH
+            </p>
+          </div>
+          <div className="bg-gradient-to-r from-orange-100 to-orange-200 p-4 rounded-lg">
+            <h3 className="text-lg font-medium text-gray-800">Properties</h3>
+            <p className="text-2xl font-bold text-gray-900">
+              {investments.length > 0 
+                ? new Set(investments.map(inv => inv.propertyId)).size
+                : 0}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div className="bg-white rounded-lg shadow-md p-6">
+        <h2 className="text-2xl font-semibold mb-4">My Investments</h2>
+        
+        {investments.length === 0 ? (
+          <div className="text-center py-8">
+            <p className="text-gray-600 mb-4">You haven't made any investments yet.</p>
+            <Link 
+              href="/invest" 
+              className="bg-orange-500 text-white py-2 px-4 rounded-md hover:bg-orange-600 transition"
+            >
+              Explore Properties
+            </Link>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="min-w-full bg-white">
+              <thead>
+                <tr className="bg-gray-100 text-gray-700">
+                  <th className="py-3 px-4 text-left">Property</th>
+                  <th className="py-3 px-4 text-left">Location</th>
+                  <th className="py-3 px-4 text-left">Investment Amount</th>
+                  <th className="py-3 px-4 text-left">Investment Date</th>
+                  <th className="py-3 px-4 text-left">Transaction</th>
+                  <th className="py-3 px-4 text-left">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {investments.map((investment) => {
+                  const property = properties[investment.propertyId];
+                  return (
+                    <tr key={investment.id} className="border-b border-gray-200 hover:bg-gray-50">
+                      <td className="py-3 px-4">
+                        {property ? (
+                          <div className="flex items-center">
+                            <div className="h-10 w-10 rounded-md overflow-hidden mr-3">
+                              <img 
+                                src={property.image || '/placeholder-property.jpg'} 
+                                alt={property.name} 
+                                className="h-full w-full object-cover"
+                              />
+                            </div>
+                            <div>
+                              <p className="font-medium">{property.name}</p>
+                              <p className="text-sm text-gray-500">{property.symbol}</p>
+                            </div>
+                          </div>
+                        ) : (
+                          <p>Property not found</p>
+                        )}
+                      </td>
+                      <td className="py-3 px-4">{property?.location || 'N/A'}</td>
+                      <td className="py-3 px-4 font-medium">{investment.amountInvested.toFixed(3)} ETH</td>
+                      <td className="py-3 px-4">
+                        {new Date(investment.createdAt).toLocaleDateString()}
+                      </td>
+                      <td className="py-3 px-4">
+                        {investment.transactionHash ? (
+                          <a
+                            href={`https://sepolia.etherscan.io/tx/${investment.transactionHash}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-blue-500 hover:text-blue-700 text-xs truncate block"
+                            title={investment.transactionHash}
+                          >
+                            {investment.transactionHash.substring(0, 10)}...
+                          </a>
+                        ) : (
+                          <span className="text-gray-400">No hash</span>
+                        )}
+                      </td>
+                      <td className="py-3 px-4">
+                        {property && (
+                          <Link 
+                            href={`/invest/${property.id}`}
+                            className="text-orange-500 hover:text-orange-700"
+                          >
+                            View Details
+                          </Link>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
     </div>
   );

@@ -1,0 +1,67 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id             String        @id @default(uuid())
+  clerkId        String        @unique
+  email          String        @unique
+  username       String?
+  phoneNumber    String?
+  metamaskWallet String?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  investments    Investment[]
+  
+  @@map("users")
+}
+
+model Property {
+  id               String        @id @default(uuid())
+  name             String
+  symbol           String
+  propertyValue    Float
+  totalShares      Int
+  availableShares  Int
+  minInvestment    Float
+  location         String
+  description      String        @db.Text
+  image            String
+  riskLevel        String
+  expectedReturn   String
+  propertyURI      String?
+  tokenAddress     String?
+  isFundingComplete Boolean       @default(false)
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+  investments      Investment[]
+  
+  @@map("properties")
+}
+
+model Investment {
+  id              String     @id @default(uuid())
+  userId          String
+  propertyId      String
+  amountInvested  Float
+  walletAddress   String
+  transactionHash String?    // Optional blockchain transaction hash
+  status          String     @default("COMPLETED")
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+  user            User       @relation(fields: [userId], references: [id])
+  property        Property   @relation(fields: [propertyId], references: [id])
+  
+  @@map("investments")
+}

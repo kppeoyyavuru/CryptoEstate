@@ -1,41 +1,10 @@
 import { SignedIn, SignedOut, UserButton } from '@clerk/nextjs'
 import Link from 'next/link'
 import Image from 'next/image'
+import PropertyList from './components/PropertyList'
+import { Suspense } from 'react'
 
-// Mock data for featured properties
-const featuredProperties = [
-  {
-    id: 1,
-    title: "Modern Downtown Apartment",
-    price: "0.5 ETH",
-    location: "New York, NY",
-    beds: 2,
-    baths: 2,
-    sqft: 1200,
-    image: "https://images.unsplash.com/photo-1493809842364-78817add7ffb?q=80&w=2070&auto=format&fit=crop"
-  },
-  {
-    id: 2,
-    title: "Luxury Villa with Pool",
-    price: "2.3 ETH",
-    location: "Miami, FL",
-    beds: 4,
-    baths: 3,
-    sqft: 3200,
-    image: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=2070&auto=format&fit=crop"
-  },
-  {
-    id: 3,
-    title: "Beachfront Condo",
-    price: "1.2 ETH",
-    location: "Los Angeles, CA",
-    beds: 3,
-    baths: 2,
-    sqft: 1800,
-    image: "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?q=80&w=2070&auto=format&fit=crop"
-  }
-];
-
+// Make this a client component that loads quickly
 export default function Home() {
   return (
     <div className="min-h-screen">
@@ -55,7 +24,7 @@ export default function Home() {
           <div className="flex items-center gap-4">
             <SignedOut>
               <div className="flex items-center gap-4">
-                <Link href="/sign-in" className="text-gray-600 hover:text-blue-600">
+                <Link href="/sign-in" className="text-gray-600 hover:text-orange-600">
                   Sign In
                 </Link>
                 <Link href="/sign-up" className="btn btn-primary">
@@ -88,7 +57,6 @@ export default function Home() {
             className="object-cover"
             priority
           />
-          <div className="absolute inset-0 bg-gradient-to-r from-blue-900/90 to-purple-900/80"></div>
         </div>
         <div className="hero-content">
           <h1 className="hero-title">
@@ -120,86 +88,7 @@ export default function Home() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {featuredProperties.map((property) => (
-              <div key={property.id} className="property-card">
-                <div className="relative h-[220px] w-full overflow-hidden">
-                  <Image
-                    src={property.image}
-                    alt={property.title}
-                    fill
-                    className="object-cover"
-                  />
-                </div>
-                <div className="property-content">
-                  <h3 className="property-title">{property.title}</h3>
-                  <p className="property-price">{property.price}</p>
-                  <p className="property-location">
-                    <svg 
-                      xmlns="http://www.w3.org/2000/svg" 
-                      viewBox="0 0 24 24" 
-                      fill="none" 
-                      stroke="currentColor" 
-                      strokeWidth="2" 
-                      strokeLinecap="round" 
-                      strokeLinejoin="round"
-                      className="w-3.5 h-3.5 flex-shrink-0"
-                    >
-                      <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
-                      <circle cx="12" cy="10" r="3"></circle>
-                    </svg>
-                    {property.location}
-                  </p>
-                  <div className="property-features">
-                    <div className="property-feature">
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                        className="w-3.5 h-3.5"
-                      >
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                      </svg>
-                      {property.beds} Beds
-                    </div>
-                    <div className="property-feature">
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                        className="w-3.5 h-3.5"
-                      >
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
-                      </svg>
-                      {property.baths} Baths
-                    </div>
-                    <div className="property-feature">
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                        className="w-3.5 h-3.5"
-                      >
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5v-4m0 4h-4m4 0l-5-5" />
-                      </svg>
-                      {property.sqft} sqft
-                    </div>
-                  </div>
-                  
-                  <button className="btn btn-primary w-full mt-4">View Details</button>
-                </div>
-              </div>
-            ))}
-          </div>
-          
-          <div className="text-center mt-12">
-            <Link href="/properties" className="btn btn-primary">
-              View All Properties
-            </Link>
-          </div>
+          <PropertyList initialProperties={[]} />
         </div>
       </div>
 
@@ -255,23 +144,25 @@ export default function Home() {
         </div>
       </div>
 
-      {/* CTA Section */}
-      <div className="py-16 bg-gradient-to-r from-blue-600 to-purple-600 text-white">
-        <div className="container text-center">
-          <h2 className="text-3xl font-bold mb-4">Ready to Start Investing?</h2>
-          <p className="text-xl max-w-2xl mx-auto mb-8 opacity-90">
-            Join thousands of investors already building their real estate portfolio with CryptoEstates.
-          </p>
-          <div className="flex flex-wrap justify-center gap-4">
-            <Link href="/sign-up" className="btn btn-lg bg-white text-blue-600 hover:bg-gray-100">
-              Create Account
-            </Link>
-            <Link href="/invest" className="btn btn-lg btn-outline-white">
-              Explore Investments
-            </Link>
+      {/* CTA Section - Only shown when user is not signed in */}
+      <SignedOut>
+        <div className="py-16 bg-gradient-to-r from-orange-500 to-orange-600 text-white">
+          <div className="container text-center">
+            <h2 className="text-3xl font-bold mb-4">Ready to Start Investing?</h2>
+            <p className="text-xl max-w-2xl mx-auto mb-8 opacity-90">
+              Join thousands of investors already building their real estate portfolio with CryptoEstates.
+            </p>
+            <div className="flex flex-wrap justify-center gap-4">
+              <Link href="/sign-up" className="btn btn-lg bg-white text-orange-600 hover:bg-gray-100">
+                Create Account
+              </Link>
+              <Link href="/invest" className="btn btn-lg border-2 border-white text-white hover:bg-orange-600">
+                Explore Investments
+              </Link>
+            </div>
           </div>
         </div>
-      </div>
+      </SignedOut>
     </div>
   )
 } 

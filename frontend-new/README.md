@@ -1,36 +1,88 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# CryptoEstates - Blockchain-Powered Real Estate Investments
+
+CryptoEstates is a platform that enables users to invest in tokenized real estate properties using cryptocurrency.
+
+## Project Structure
+
+- `app/` - Next.js frontend application
+- `contracts/` - Solidity smart contracts
+- `scripts/` - Deployment scripts
+- `prisma/` - Database schema and client
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
+
+- Node.js 18+ and npm
+- MetaMask wallet with some Sepolia ETH for testing
+- Alchemy or Infura account for Sepolia RPC URL
+- Etherscan API key for contract verification
+
+### Setup Environment Variables
+
+Copy the `.env.example` file to `.env` and fill in the required values:
+
+```bash
+cp .env.example .env
+```
+
+Required environment variables:
+
+- `DATABASE_URL`: Your Neon PostgreSQL database URL
+- `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`: Clerk authentication publishable key
+- `CLERK_SECRET_KEY`: Clerk authentication secret key
+- `PRIVATE_KEY`: Your Ethereum wallet private key for contract deployment
+- `SEPOLIA_RPC_URL`: Sepolia testnet RPC URL (from Alchemy/Infura)
+- `ETHERSCAN_API_KEY`: API key for Etherscan contract verification
+
+### Install Dependencies
+
+```bash
+npm install
+```
+
+### Deploy Smart Contracts to Sepolia
+
+Run the following command to deploy the contracts to Sepolia testnet:
+
+```bash
+npx hardhat run scripts/deploy.js --network sepolia
+```
+
+This will:
+1. Deploy the PropertyFactory contract
+2. Create sample property tokens
+3. Update the contracts.json file with the deployed addresses
+4. Verify the contract on Etherscan
+
+### Run the Development Server
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000) in your browser to see the application.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Smart Contracts
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+The project includes the following smart contracts:
 
-## Learn More
+1. **PropertyFactory.sol** - Main contract for creating and managing tokenized real estate properties
+2. **PropertyToken.sol** - ERC20 token contract for property shares
 
-To learn more about Next.js, take a look at the following resources:
+## Using MetaMask with the Application
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+1. Install the MetaMask browser extension
+2. Create or import a wallet
+3. Switch to the Sepolia test network
+4. Get some test ETH from a Sepolia faucet
+5. Connect your wallet to the application
+6. Browse and invest in properties
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Features
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- User authentication with Clerk
+- MetaMask wallet integration
+- Tokenized real estate investment
+- Dashboard to track investments
+- Property listings with detailed information

@@ -4,15 +4,223 @@
 
 :root {
   --primary-color: #f97316;
-  --primary-dark: #ea580c;
-  --secondary-color: #718096;
-  --background-color: #ffffff;
+  --primary-hover: #ea580c;
+  --primary-dark: #c2410c;
+  --secondary-color: #0f172a;
+  --dark-blue: #1e40af;
+  --light-gray: #f3f4f6;
+  --medium-gray: #9ca3af;
+  --dark-gray: #4b5563;
+  --danger: #ef4444;
+  --warning: #f59e0b;
+  --success: #10b981;
+  --background-color: #f9fafb;
   --text-color: #1f2937;
-  --accent-color: #f3f4f6;
+  --accent-color: #fff7ed;
   --border-color: #e5e7eb;
   --gradient-start: #f97316;
-  --gradient-end: #718096;
+  --gradient-end: #ea580c;
   --card-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  --card-bg: #ffffff;
+  --text-light: #6b7280;
+  --danger-color: #ef4444;
+  --success-color: #10b981;
+}
+
+@layer base {
+  body {
+    @apply bg-gray-50 text-gray-900;
+  }
+}
+
+@layer components {
+  /* Buttons */
+  .btn {
+    @apply px-4 py-2 rounded-md font-medium transition-colors;
+  }
+  
+  .btn-primary {
+    @apply bg-orange-500 hover:bg-orange-600 text-white py-2 px-4 rounded-md transition duration-300;
+  }
+  
+  .btn-secondary {
+    @apply bg-gray-200 text-gray-800 hover:bg-gray-300;
+  }
+  
+  /* Navigation */
+  .dashboard-header {
+    @apply bg-white shadow-sm sticky top-0 z-10;
+  }
+  
+  .dashboard-nav {
+    @apply container mx-auto flex items-center justify-between py-4 px-6;
+  }
+  
+  .nav-logo {
+    @apply text-xl font-bold text-orange-600 flex items-center space-x-2;
+  }
+  
+  .nav-logo-icon {
+    @apply w-8 h-8 bg-orange-600 rounded-full;
+  }
+  
+  .nav-links {
+    @apply flex space-x-6;
+  }
+  
+  .nav-link {
+    @apply text-gray-600 hover:text-orange-600 transition-colors;
+  }
+  
+  .nav-link.active {
+    @apply text-orange-600 font-medium;
+  }
+  
+  /* Layout */
+  .dashboard-container {
+    @apply container mx-auto px-6 py-8;
+  }
+  
+  /* Investment Page */
+  .invest-page {
+    @apply min-h-screen flex flex-col;
+  }
+  
+  .invest-hero {
+    @apply bg-gradient-to-r from-orange-600 to-orange-700 text-white py-12 rounded-lg mb-10;
+  }
+  
+  .invest-hero-content {
+    @apply max-w-3xl mx-auto px-6;
+  }
+  
+  .invest-hero-title {
+    @apply text-3xl md:text-4xl font-bold mb-4;
+  }
+  
+  .invest-hero-subtitle {
+    @apply text-lg text-orange-100;
+  }
+  
+  /* Investment Summary */
+  .investment-summary {
+    @apply bg-white rounded-lg shadow p-6 mb-10;
+  }
+  
+  .summary-title {
+    @apply text-xl font-semibold mb-4;
+  }
+  
+  .summary-stats {
+    @apply grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4;
+  }
+  
+  .summary-stat {
+    @apply border rounded-lg p-4;
+  }
+  
+  .stat-label {
+    @apply text-gray-500 text-sm;
+  }
+  
+  .stat-value {
+    @apply text-2xl font-medium mt-1;
+  }
+  
+  .stat-value.positive {
+    @apply text-green-600;
+  }
+  
+  .stat-value.negative {
+    @apply text-red-600;
+  }
+  
+  /* Section Titles */
+  .section-title {
+    @apply text-2xl font-bold mb-6;
+  }
+  
+  /* Property Cards */
+  .properties-grid {
+    @apply grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6;
+  }
+  
+  .property-card {
+    @apply bg-white rounded-lg shadow overflow-hidden transition-transform hover:-translate-y-1;
+  }
+  
+  .property-image-container {
+    @apply relative h-48 w-full;
+  }
+  
+  .property-image {
+    @apply object-cover;
+  }
+  
+  .property-risk-badge {
+    @apply absolute top-2 right-2 text-white text-xs font-medium px-2 py-1 rounded-full;
+  }
+  
+  .risk-low {
+    @apply bg-green-600;
+  }
+  
+  .risk-medium {
+    @apply bg-yellow-500;
+  }
+  
+  .risk-high {
+    @apply bg-red-600;
+  }
+  
+  .property-content {
+    @apply p-4;
+  }
+  
+  .property-header {
+    @apply flex justify-between items-center mb-2;
+  }
+  
+  .property-title {
+    @apply text-lg font-semibold;
+  }
+  
+  .property-price {
+    @apply text-orange-600 font-medium;
+  }
+  
+  .property-location {
+    @apply text-gray-600 text-sm flex items-center space-x-1 mb-3;
+  }
+  
+  .property-description {
+    @apply text-gray-700 text-sm mb-4;
+  }
+  
+  .property-details {
+    @apply space-y-2;
+  }
+  
+  .property-detail {
+    @apply text-sm;
+  }
+  
+  .detail-label {
+    @apply font-medium text-gray-600;
+  }
+  
+  .detail-value {
+    @apply ml-1;
+  }
+  
+  .detail-value.positive {
+    @apply text-green-600;
+  }
+  
+  /* Loading indicator */
+  .loader {
+    @apply w-10 h-10 border-4 border-orange-200 border-t-orange-600 rounded-full animate-spin;
+  }
 }
 
 * {
@@ -208,12 +416,12 @@ body {
   color: #111827;
 }
 
-.text-blue-600 {
+.text-orange-600 {
   color: var(--primary-color);
 }
 
-.text-blue-800 {
-  color: var(--primary-dark);
+.text-orange-800 {
+  color: var(--primary-hover);
 }
 
 /* Navbar */
@@ -287,16 +495,8 @@ body {
   line-height: 1.5;
 }
 
-.btn-primary {
-  background-color: var(--primary-color);
-  color: white;
-  border: none;
-}
-
 .btn-primary:hover {
-  background-color: var(--primary-dark);
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-  transform: translateY(-1px);
+  @apply bg-orange-600;
 }
 
 .btn-outline {
@@ -390,6 +590,7 @@ body {
   line-height: 1.2;
   margin-bottom: 1.5rem;
   color: white;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
 }
 
 .hero-subtitle {
@@ -397,6 +598,7 @@ body {
   max-width: 36rem;
   margin-bottom: 2rem;
   color: rgba(255, 255, 255, 0.9);
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
 }
 
 /* Feature Cards */
@@ -622,7 +824,7 @@ body {
 /* Auth Pages */
 .auth-page {
   min-height: 100vh;
-  background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
+  background-color: #ffc58b;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -766,7 +968,7 @@ body {
 }
 
 .auth-button:hover {
-  background-color: var(--primary-dark) !important;
+  background-color: var(--primary-hover) !important;
 }
 
 .auth-social-button {
@@ -825,13 +1027,13 @@ body {
 }
 
 .activity-icon.investment {
-  background-color: rgba(249, 115, 22, 0.1);
-  color: #f97316;
+  background-color: rgba(255, 154, 60, 0.2);
+  color: #ff9a3c;
 }
 
 .activity-icon.dividend {
-  background-color: rgba(113, 128, 150, 0.1);
-  color: #718096;
+  background-color: rgba(255, 197, 139, 0.2);
+  color: #ffc58b;
 }
 
 .activity-icon svg {
@@ -868,237 +1070,11 @@ body {
   }
 }
 
-/* Invest Page */
-.invest-page {
-  min-height: 100vh;
-  background-color: #f9fafb;
-}
-
-.invest-hero {
-  background: linear-gradient(to right, var(--primary-color), var(--secondary-color));
-  padding: 3rem 1rem;
-  color: white;
-  text-align: center;
-  margin-bottom: 2rem;
-}
-
-.invest-hero-content {
-  max-width: 800px;
-  margin: 0 auto;
-}
-
-.invest-hero-title {
-  font-size: 2.25rem;
-  font-weight: 700;
-  margin-bottom: 1rem;
-}
-
-.invest-hero-subtitle {
-  font-size: 1.125rem;
-  opacity: 0.9;
-}
-
-.investment-summary {
-  background-color: white;
-  border-radius: 0.5rem;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  padding: 1.5rem;
-  margin-bottom: 2rem;
-}
-
-.summary-title {
-  font-size: 1.25rem;
-  font-weight: 700;
-  margin-bottom: 1.5rem;
-}
-
-.summary-stats {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 1.5rem;
-}
-
-.summary-stat {
-  text-align: center;
-}
-
-.property-risk-badge {
-  position: absolute;
-  top: 0.75rem;
-  right: 0.75rem;
-  padding: 0.25rem 0.5rem;
-  border-radius: 9999px;
-  font-size: 0.75rem;
-  font-weight: 500;
-  color: white;
-}
-
-.risk-low {
-  background-color: #10B981;
-}
-
-.risk-medium {
-  background-color: #F59E0B;
-}
-
-.risk-high {
-  background-color: #EF4444;
-}
-
-.property-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: start;
-  margin-bottom: 0.5rem;
-}
-
-.property-description {
-  font-size: 0.875rem;
-  color: #111827;
-  margin-bottom: 1rem;
-}
-
-.property-details {
-  display: flex;
-  justify-content: space-between;
-  padding: 0.75rem 0;
-  border-top: 1px solid var(--border-color);
-  border-bottom: 1px solid var(--border-color);
-  margin-bottom: 1rem;
-  font-size: 0.875rem;
-  color: #6B7280;
-}
-
-.property-detail {
-  display: flex;
-  align-items: center;
-  gap: 0.25rem;
-}
-
-.detail-label {
-  font-weight: 500;
-}
-
-.detail-value {
-  font-weight: 600;
-}
-
-.detail-value.positive {
-  color: #f97316;
-}
-
-.property-actions {
-  display: flex;
-  gap: 0.75rem;
-}
-
-.btn.flex-1 {
-  flex: 1;
-}
-
-.btn-icon {
-  padding: 0.5rem;
-  width: 40px;
-  background-color: transparent;
-  border: 1px solid var(--border-color);
-  border-radius: 0.375rem;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  cursor: pointer;
-}
-
-.btn-icon:hover {
-  background-color: var(--accent-color);
-}
-
-.btn-icon svg {
-  color: #6B7280;
-}
-
 /* Dashboard Styles */
 .dashboard-page {
   min-height: 100vh;
   background-color: #f8fafc;
   font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-}
-
-.dashboard-header {
-  background-color: white;
-  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-  position: sticky;
-  top: 0;
-  z-index: 10;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
-}
-
-.dashboard-nav {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  height: 4rem;
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 0 1.5rem;
-}
-
-.nav-logo {
-  font-size: 1.25rem;
-  font-weight: bold;
-  color: var(--primary-color);
-  text-decoration: none;
-  display: flex;
-  align-items: center;
-  transition: color 0.2s;
-}
-
-.nav-logo:hover {
-  color: var(--primary-dark);
-}
-
-.nav-logo-icon {
-  display: inline-block;
-  width: 24px;
-  height: 24px;
-  background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-  border-radius: 6px;
-  margin-right: 0.5rem;
-  transition: transform 0.2s;
-}
-
-.nav-logo:hover .nav-logo-icon {
-  transform: scale(1.1);
-}
-
-.nav-links {
-  display: flex;
-  align-items: center;
-  gap: 2rem;
-}
-
-.nav-link {
-  color: #64748b;
-  text-decoration: none;
-  font-size: 0.875rem;
-  font-weight: 500;
-  padding: 0.5rem 0;
-  border-bottom: 2px solid transparent;
-  transition: all 0.2s;
-}
-
-.nav-link:hover {
-  color: var(--primary-color);
-}
-
-.nav-link.active {
-  color: var(--primary-color);
-  border-bottom-color: var(--primary-color);
-}
-
-.dashboard-container {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem 1.5rem;
 }
 
 .dashboard-welcome {
@@ -1157,7 +1133,7 @@ body {
 }
 
 .stat-value.positive {
-  color: #f97316;
+  color: #ff9a3c;
 }
 
 .dashboard-grid {
@@ -1291,13 +1267,13 @@ body {
 }
 
 .activity-icon.investment {
-  background-color: rgba(249, 115, 22, 0.1);
-  color: #f97316;
+  background-color: rgba(255, 154, 60, 0.2);
+  color: #ff9a3c;
 }
 
 .activity-icon.dividend {
-  background-color: rgba(113, 128, 150, 0.1);
-  color: #718096;
+  background-color: rgba(255, 197, 139, 0.2);
+  color: #ffc58b;
 }
 
 .activity-item:hover .activity-icon {
@@ -1334,17 +1310,17 @@ body {
 }
 
 .amount.investment {
-  color: #f97316;
+  color: #ff9a3c;
 }
 
 .amount.dividend {
-  color: #718096;
+  color: #ffc58b;
 }
 
 .activity-status {
   font-size: 0.75rem;
-  background-color: rgba(249, 115, 22, 0.1);
-  color: #f97316;
+  background-color: rgba(255, 154, 60, 0.2);
+  color: #fd8a14;
   padding: 0.25rem 0.5rem;
   border-radius: 9999px;
   display: inline-block;
@@ -1463,7 +1439,7 @@ body {
 }
 
 .cta-section {
-  background: linear-gradient(135deg, #fff7ed, #e2e8f0);
+  background-color: #ffc58b;
   padding: 2.5rem;
   border-radius: 0.75rem;
   display: flex;
@@ -1471,29 +1447,6 @@ body {
   align-items: center;
   text-align: center;
   position: relative;
-  overflow: hidden;
-}
-
-.cta-section::before {
-  content: '';
-  position: absolute;
-  width: 350px;
-  height: 350px;
-  border-radius: 50%;
-  background: linear-gradient(to right, rgba(249, 115, 22, 0.1), rgba(113, 128, 150, 0.1));
-  top: -150px;
-  right: -150px;
-}
-
-.cta-section::after {
-  content: '';
-  position: absolute;
-  width: 250px;
-  height: 250px;
-  border-radius: 50%;
-  background: linear-gradient(to right, rgba(249, 115, 22, 0.05), rgba(113, 128, 150, 0.05));
-  bottom: -100px;
-  left: -100px;
 }
 
 .cta-title {

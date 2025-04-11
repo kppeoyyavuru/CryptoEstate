@@ -1,0 +1,455 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+import { useUser } from '@clerk/nextjs';
+import { redirect, useRouter } from 'next/navigation';
+import Link from 'next/link';
+import Image from 'next/image';
+import { useBlockchain, PropertyDetails } from '../blockchain/BlockchainContext';
+
+// Type for property details with additional UI state
+interface PropertyWithState extends PropertyDetails {
+  image: string;
+  location: string;
+  description: string;
+  riskLevel: string;
+  investmentAmount: string;
+  isInvesting: boolean;
+  successMessage: string;
+  errorMessage: string;
+}
+
+export default function InvestPage() {
+  const { user, isLoaded, isSignedIn } = useUser();
+  const router = useRouter();
+  const [properties, setProperties] = useState<PropertyWithState[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  
+  const { 
+    isConnected, 
+    account, 
+    connectWallet, 
+    loadProperties, 
+    investInProperty, 
+    properties: blockchainProperties,
+    loading: blockchainLoading,
+    error: blockchainError
+  } = useBlockchain();
+
+  // Check authentication
+  useEffect(() => {
+    if (isLoaded && !isSignedIn) {
+      redirect('/sign-in');
+    }
+  }, [isLoaded, isSignedIn]);
+
+  // Load properties from blockchain
+  useEffect(() => {
+    const fetchProperties = async () => {
+      if (isConnected) {
+        await loadProperties();
+      }
+    };
+
+    fetchProperties();
+  }, [isConnected, loadProperties]);
+
+  // Transform blockchain properties to UI properties
+  useEffect(() => {
+    if (blockchainProperties.length > 0) {
+      // Sample images, locations, and risk levels for demonstration
+      const images = [
+        "https://images.unsplash.com/photo-1493809842364-78817add7ffb?q=80&w=2070&auto=format&fit=crop",
+        "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=2070&auto=format&fit=crop",
+        "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?q=80&w=2070&auto=format&fit=crop",
+        "https://images.unsplash.com/photo-1497366754035-f200968a6e72?q=80&w=2069&auto=format&fit=crop",
+        "https://images.unsplash.com/photo-1564013799919-ab600027ffc6?q=80&w=2070&auto=format&fit=crop",
+        "https://images.unsplash.com/photo-1560518883-ce09059eeffa?q=80&w=2073&auto=format&fit=crop"
+      ];
+      
+      const locations = [
+        "New York, NY",
+        "Miami, FL",
+        "Chicago, IL",
+        "San Francisco, CA",
+        "Seattle, WA",
+        "Denver, CO"
+      ];
+      
+      const descriptions = [
+        "Prime residential unit in Manhattan's financial district with high rental demand.",
+        "Luxurious beachfront property with panoramic ocean views and private access.",
+        "Modern micro-apartments in the heart of the city, perfect for young professionals.",
+        "Prime commercial real estate in the tech hub with stable long-term tenants.",
+        "Charming cottage with private lake access and year-round rental appeal.",
+        "Established retail center with long-term tenants and strong cash flow."
+      ];
+      
+      const riskLevels = ["Medium", "High", "Low", "Medium", "Low", "High"];
+
+      const uiProperties = blockchainProperties.map((prop, index) => ({
+        ...prop,
+        image: images[index % images.length],
+        location: locations[index % locations.length],
+        description: descriptions[index % descriptions.length],
+        riskLevel: riskLevels[index % riskLevels.length],
+        investmentAmount: prop.minInvestment,
+        isInvesting: false,
+        successMessage: '',
+        errorMessage: ''
+      }));
+
+      setProperties(uiProperties);
+      setIsLoading(false);
+    } else if (!blockchainLoading && isConnected) {
+      // If connected but no properties, show mock data for demonstration
+      setProperties(getMockProperties());
+      setIsLoading(false);
+    } else if (!blockchainLoading && !isConnected) {
+      // If not connected, show mock data
+      setProperties(getMockProperties());
+      setIsLoading(false);
+    }
+  }, [blockchainProperties, blockchainLoading, isConnected]);
+
+  // Handle investment amount change
+  const handleAmountChange = (propertyId: number, value: string) => {
+    setProperties(prevProps => 
+      prevProps.map(prop => 
+        prop.propertyId === propertyId 
+          ? { ...prop, investmentAmount: value, errorMessage: '' } 
+          : prop
+      )
+    );
+  };
+
+  // Handle investment submission
+  const handleInvest = async (propertyId: number) => {
+    if (!isConnected) {
+      await connectWallet();
+      return;
+    }
+
+    const property = properties.find(p => p.propertyId === propertyId);
+    if (!property) return;
+
+    // Validate investment amount
+    const amount = parseFloat(property.investmentAmount);
+    const minInvestment = parseFloat(property.minInvestment);
+    
+    if (isNaN(amount) || amount < minInvestment) {
+      setProperties(prevProps => 
+        prevProps.map(prop => 
+          prop.propertyId === propertyId 
+            ? { ...prop, errorMessage: `Minimum investment is ${minInvestment} ETH` } 
+            : prop
+        )
+      );
+      return;
+    }
+
+    // Set investing state
+    setProperties(prevProps => 
+      prevProps.map(prop => 
+        prop.propertyId === propertyId 
+          ? { ...prop, isInvesting: true, errorMessage: '', successMessage: '' } 
+          : prop
+      )
+    );
+
+    try {
+      // Call blockchain function to invest
+      const success = await investInProperty(propertyId, property.investmentAmount);
+      
+      // Update property state
+      setProperties(prevProps => 
+        prevProps.map(prop => 
+          prop.propertyId === propertyId 
+            ? { 
+                ...prop, 
+                isInvesting: false, 
+                successMessage: success ? `Successfully invested ${property.investmentAmount} ETH` : '',
+                errorMessage: !success ? 'Investment failed. Please try again.' : '' 
+              } 
+            : prop
+        )
+      );
+
+      // Reload properties
+      if (success) {
+        await loadProperties();
+      }
+    } catch (error: any) {
+      setProperties(prevProps => 
+        prevProps.map(prop => 
+          prop.propertyId === propertyId 
+            ? { 
+                ...prop, 
+                isInvesting: false, 
+                errorMessage: error.message || 'Investment failed. Please try again.' 
+              } 
+            : prop
+        )
+      );
+    }
+  };
+
+  // Mock user investment data
+  const userInvestments = {
+    totalInvested: "1.45 ETH",
+    portfolioValue: "1.72 ETH",
+    returns: "+18.6%",
+    properties: properties.length
+  };
+
+  return (
+    <div className="invest-page">
+      {/* Navigation */}
+      <header className="dashboard-header">
+        <nav className="dashboard-nav">
+          <Link href="/" className="nav-logo">
+            <span className="nav-logo-icon"></span>
+            CryptoEstates
+          </Link>
+          
+          <div className="nav-links">
+            <Link href="/dashboard" className="nav-link">Dashboard</Link>
+            <Link href="/invest" className="nav-link active">Invest</Link>
+            <Link href="/profile" className="nav-link">Profile</Link>
+          </div>
+        </nav>
+      </header>
+
+      {/* Main Content */}
+      <div className="dashboard-container">
+        {/* Hero Section */}
+        <div className="invest-hero">
+          <div className="invest-hero-content">
+            <h1 className="invest-hero-title">Tokenized Real Estate Investment</h1>
+            <p className="invest-hero-subtitle">
+              Invest in premium properties with as little as 0.05 ETH. Get started with these curated opportunities.
+            </p>
+            
+            {!isConnected && (
+              <button 
+                onClick={connectWallet} 
+                className="btn btn-primary mt-4"
+                disabled={blockchainLoading}
+              >
+                {blockchainLoading ? 'Connecting...' : 'Connect Wallet to Invest'}
+              </button>
+            )}
+            
+            {isConnected && (
+              <div className="mt-4 p-3 bg-green-50 text-green-700 rounded-md">
+                <p>Connected: {account?.slice(0, 6)}...{account?.slice(-4)}</p>
+              </div>
+            )}
+            
+            {blockchainError && (
+              <div className="mt-4 p-3 bg-red-50 text-red-700 rounded-md">
+                <p>{blockchainError}</p>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* User Investment Summary */}
+        <div className="investment-summary">
+          <h2 className="summary-title">Your Investment Summary</h2>
+          <div className="summary-stats">
+            <div className="summary-stat">
+              <p className="stat-label">Total Invested</p>
+              <p className="stat-value">{userInvestments.totalInvested}</p>
+            </div>
+            
+            <div className="summary-stat">
+              <p className="stat-label">Portfolio Value</p>
+              <p className="stat-value">{userInvestments.portfolioValue}</p>
+            </div>
+            
+            <div className="summary-stat">
+              <p className="stat-label">Returns</p>
+              <p className="stat-value positive">{userInvestments.returns}</p>
+            </div>
+            
+            <div className="summary-stat">
+              <p className="stat-label">Properties</p>
+              <p className="stat-value">{userInvestments.properties}</p>
+            </div>
+          </div>
+        </div>
+
+        <h2 className="section-title">Available Investment Opportunities</h2>
+        
+        {isLoading ? (
+          <div className="flex justify-center items-center py-20">
+            <div className="loader"></div>
+          </div>
+        ) : (
+          <div className="properties-grid">
+            {properties.map((property) => (
+              <div key={property.propertyId} className="property-card">
+                <div className="property-image-container">
+                  <Image
+                    src={property.image}
+                    alt={property.name}
+                    fill
+                    className="property-image"
+                  />
+                  <div className={`property-risk-badge risk-${property.riskLevel.toLowerCase()}`}>
+                    {property.riskLevel} Risk
+                  </div>
+                </div>
+                
+                <div className="property-content">
+                  <div className="property-header">
+                    <h3 className="property-title">{property.name}</h3>
+                    <span className="property-price">{property.propertyValue} ETH</span>
+                  </div>
+                  
+                  <p className="property-location">
+                    <svg 
+                      xmlns="http://www.w3.org/2000/svg" 
+                      viewBox="0 0 24 24" 
+                      fill="none" 
+                      stroke="currentColor" 
+                      strokeWidth="2" 
+                      strokeLinecap="round" 
+                      strokeLinejoin="round"
+                      className="w-3.5 h-3.5 flex-shrink-0"
+                    >
+                      <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                      <circle cx="12" cy="10" r="3"></circle>
+                    </svg>
+                    {property.location}
+                  </p>
+                  
+                  <p className="property-description">{property.description}</p>
+                  
+                  <div className="property-details">
+                    <div className="property-detail">
+                      <span className="detail-label">Expected Return:</span> 
+                      <span className="detail-value positive">10-15%</span>
+                    </div>
+                    <div className="property-detail">
+                      <span className="detail-label">Min:</span> {property.minInvestment} ETH
+                    </div>
+                    
+                    {property.isFundingComplete ? (
+                      <div className="bg-yellow-100 text-yellow-800 p-2 rounded mt-2 text-sm">
+                        Funding complete
+                      </div>
+                    ) : (
+                      <div className="property-detail">
+                        <span className="detail-label">Available:</span> {property.availableShares}/{property.totalShares} shares
+                      </div>
+                    )}
+                  </div>
+                  
+                  {!property.isFundingComplete && (
+                    <div className="mt-4">
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="text"
+                          placeholder={`Min ${property.minInvestment} ETH`}
+                          value={property.investmentAmount}
+                          onChange={(e) => handleAmountChange(property.propertyId, e.target.value)}
+                          className="px-3 py-2 border border-gray-300 rounded-md flex-grow"
+                        />
+                        <button
+                          className="btn btn-primary whitespace-nowrap"
+                          onClick={() => handleInvest(property.propertyId)}
+                          disabled={property.isInvesting}
+                        >
+                          {property.isInvesting ? 'Investing...' : 'Invest'}
+                        </button>
+                      </div>
+                      
+                      {property.errorMessage && (
+                        <p className="text-red-500 text-sm mt-2">{property.errorMessage}</p>
+                      )}
+                      
+                      {property.successMessage && (
+                        <p className="text-green-500 text-sm mt-2">{property.successMessage}</p>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// Helper function to get mock properties for display
+function getMockProperties(): PropertyWithState[] {
+  return [
+    {
+      propertyId: 0,
+      tokenAddress: "0x1234567890123456789012345678901234567890",
+      name: "Downtown Luxury Apartment",
+      symbol: "DLA",
+      propertyValue: "0.5",
+      totalShares: 100,
+      availableShares: 65,
+      minInvestment: "0.05",
+      propertyURI: "ipfs://QmXyZ123...",
+      isFundingComplete: false,
+      createdAt: Date.now() / 1000,
+      image: "https://images.unsplash.com/photo-1493809842364-78817add7ffb?q=80&w=2070&auto=format&fit=crop",
+      location: "New York, NY",
+      description: "Prime residential unit in Manhattan's financial district with high rental demand.",
+      riskLevel: "Medium",
+      investmentAmount: "0.05",
+      isInvesting: false,
+      successMessage: '',
+      errorMessage: ''
+    },
+    {
+      propertyId: 1,
+      tokenAddress: "0x2345678901234567890123456789012345678901",
+      name: "Beachfront Villa",
+      symbol: "BFV",
+      propertyValue: "2.3",
+      totalShares: 230,
+      availableShares: 115,
+      minInvestment: "0.2",
+      propertyURI: "ipfs://QmAbC456...",
+      isFundingComplete: false,
+      createdAt: Date.now() / 1000,
+      image: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=2070&auto=format&fit=crop",
+      location: "Miami, FL",
+      description: "Luxurious beachfront property with panoramic ocean views and private access.",
+      riskLevel: "High",
+      investmentAmount: "0.2",
+      isInvesting: false,
+      successMessage: '',
+      errorMessage: ''
+    },
+    {
+      propertyId: 2,
+      tokenAddress: "0x3456789012345678901234567890123456789012",
+      name: "Urban Micro-Loft",
+      symbol: "UML",
+      propertyValue: "0.75",
+      totalShares: 150,
+      availableShares: 0,
+      minInvestment: "0.075",
+      propertyURI: "ipfs://QmDeF789...",
+      isFundingComplete: true,
+      createdAt: Date.now() / 1000,
+      image: "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?q=80&w=2070&auto=format&fit=crop",
+      location: "Chicago, IL",
+      description: "Modern micro-apartments in the heart of the city, perfect for young professionals.",
+      riskLevel: "Low",
+      investmentAmount: "0.075",
+      isInvesting: false,
+      successMessage: '',
+      errorMessage: ''
+    }
+  ];
+} 
